@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Food Donation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: Arial; text-align:center; background:#f4f4f4; }
+.container { width:90%; margin:auto; }
+input, button { padding:10px; margin:5px; width:90%; max-width:300px; }
+button { background:green; color:white; border:none; }
+table { width:100%; margin-top:20px; border-collapse: collapse; }
+th, td { border:1px solid #ddd; padding:8px; }
+th { background:green; color:white; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🍱 Food Donation System</h1>
+
+<input id="name" placeholder="Name"><br>
+<input id="food" placeholder="Food Type"><br>
+<input id="qty" placeholder="Quantity"><br>
+<input id="loc" placeholder="Location"><br>
+
+<button onclick="addFood()">Add Food</button>
+
+<input id="search" placeholder="Search location">
+<button onclick="searchFood()">Search</button>
+
+<h2>Available Food</h2>
+
+<table>
+<thead>
+<tr>
+<th>ID</th><th>Name</th><th>Food</th><th>Qty</th><th>Location</th><th>Status</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+</div>
+
+<script>
+
+let foodData = JSON.parse(localStorage.getItem("foodData")) || [];
+
+function saveData() {
+    localStorage.setItem("foodData", JSON.stringify(foodData));
+}
+
+function addFood() {
+    let item = {
+        id: Date.now(),
+        name: document.getElementById("name").value,
+        food: document.getElementById("food").value,
+        qty: document.getElementById("qty").value,
+        loc: document.getElementById("loc").value,
+        status: "Available",
+        time: new Date().getTime()
+    };
+
+    foodData.push(item);
+    saveData();
+    display(foodData);
+}
+
+function display(data) {
+    let table = document.getElementById("table");
+    table.innerHTML = "";
+
+    let now = new Date().getTime();
+
+    data.forEach((item, index) => {
+        // Expiry: 2 hours
+        if (now - item.time > 2 * 60 * 60 * 1000) return;
+
+        table.innerHTML += `
+        <tr>
+        <td>${item.id}</td>
+        <td>${item.name}</td>
+        <td>${item.food}</td>
+        <td>${item.qty}</td>
+        <td>${item.loc}</td>
+        <td>${item.status}</td>
+        <td><button onclick="collect(${item.id})">Collect</button></td>
+        </tr>
+        `;
+    });
+}
+
+function collect(id) {
+    foodData = foodData.map(item => {
+        if (item.id === id) item.status = "Collected";
+        return item;
+    });
+    saveData();
+    display(foodData);
+}
+
+function searchFood() {
+    let q = document.getElementById("search").value.toLowerCase();
+    let filtered = foodData.filter(item => item.loc.toLowerCase().includes(q));
+    display(filtered);
+}
+
+// Initial display
+display(foodData);
+
+</script>
+
+</body>
+</html>
